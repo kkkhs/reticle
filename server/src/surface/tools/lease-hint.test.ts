@@ -123,3 +123,22 @@ describe('a page whose CSP blocks the bridge', () => {
     expect(wrongPort).toContain('4999');
   });
 });
+
+describe('a production build whose SDK was stubbed', () => {
+  it('points an initialized project at the dev server, not back at init', () => {
+    const hint = leaseNotConnectedHint('http://localhost:4173/', 4400, {
+      initialized: true,
+      sdkMarker: false,
+    });
+    expect(hint).toMatch(/production build/i);
+    expect(hint).toMatch(/stub|strip/i);
+    expect(hint).toMatch(/dev server/i);
+    expect(hint).not.toContain('reticle init');
+  });
+
+  it('treats a non-localhost URL as likely production even without a marker check', () => {
+    const hint = leaseNotConnectedHint('https://app.example.com/', 4400);
+    expect(hint).toMatch(/production build/i);
+    expect(hint).toMatch(/dev server/i);
+  });
+});

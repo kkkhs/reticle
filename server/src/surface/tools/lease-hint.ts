@@ -82,14 +82,41 @@ const NUXT_FIRST =
 const RELEASE =
   'The tab stays leased either way — release it with reticle_lease{action:"release"}.';
 
-function markerClause(sdkMarker: boolean | undefined): string {
+const PRODUCTION_STUB =
+  ' A production build (`vite build`, `next build`, `next start`, or a deployed site) strips ' +
+  'Reticle or replaces it with an inert stub by design; point the lease at the dev server instead.';
+
+function isNonLocalhostUrl(url: string): boolean {
+  try {
+    const hostname = new URL(url).hostname.toLowerCase();
+    return (
+      hostname !== 'localhost' &&
+      hostname !== '127.0.0.1' &&
+      hostname !== '0.0.0.0' &&
+      hostname !== '::1' &&
+      hostname !== '[::1]'
+    );
+  } catch {
+    return false;
+  }
+}
+
+function markerClause(
+  url: string,
+  sdkMarker: boolean | undefined,
+  initialized: boolean | undefined,
+): string {
   if (sdkMarker === undefined) return '';
   return sdkMarker
     ? ' A Reticle SDK marker WAS found in the page that loaded, so the app does ship the SDK — the ' +
         'question is only why it did not reach this daemon.'
     : ' No Reticle SDK marker was found in the page that loaded. That is a check of the SERVED ' +
         'document, so a lazily-imported SDK can still be missed — but combined with the rest it ' +
-        'points at a bundle that carries no Reticle at all, i.e. wiring that never took effect.';
+        'points at a bundle that carries no Reticle at all, i.e. wiring that never took effect.' +
+        PRODUCTION_STUB +
+        (true === initialized || isNonLocalhostUrl(url)
+          ? ''
+          : ' If this is a dev server instead, run `reticle init` in it first.');
 }
 
 /**
@@ -115,7 +142,7 @@ export function leaseNotConnectedHint(
   evidence: LeaseEvidence = {},
 ): string {
   const opening = `the leased tab loaded ${url} but never dialled this daemon (port ${String(port)}).`;
-  const marker = markerClause(evidence.sdkMarker);
+  const marker = markerClause(url, evidence.sdkMarker, evidence.initialized);
 
   // 0. The page told us where it dialled, and it was not here. Proof, and it outranks the refusal
   //    branch below: a refusal proves a dial reached THIS daemon, which is a fact about some page;
@@ -172,7 +199,7 @@ export function leaseNotConnectedHint(
   //    answer, because the only branch that mentions it is the one reached when nothing is known.
   if (true === evidence.previouslyConnected) {
     const notThisApp =
-      true === evidence.sdkMarker
+      true === evidence.sdkMarker || false === evidence.sdkMarker
         ? ''
         : ' That may have been a DIFFERENT app, though: this one may carry no Reticle SDK at all, ' +
           'in which case run `reticle init` in ITS directory first — every cause below assumes the ' +
@@ -194,6 +221,10 @@ export function leaseNotConnectedHint(
   const noSdk =
     true === evidence.sdkMarker
       ? ''
-      : ' If the app carries no Reticle SDK at all, run `reticle init` in it first.';
+      : false === evidence.sdkMarker
+        ? ''
+        : isNonLocalhostUrl(url)
+          ? PRODUCTION_STUB
+          : ' If the app carries no Reticle SDK at all, run `reticle init` in it first.';
   return `${opening}${nuxt}${marker} ${PORT_DIFFERENTIAL}${noSdk} ${REAL_CAUSES} ${RELEASE}`;
 }
