@@ -141,4 +141,38 @@ describe('a production build whose SDK was stubbed', () => {
     expect(hint).toMatch(/production build/i);
     expect(hint).toMatch(/dev server/i);
   });
+
+  it('does not treat every loopback address as production', () => {
+    const hint = leaseNotConnectedHint('http://127.0.0.2:5173/', 4400);
+    expect(hint).not.toMatch(/production build/i);
+  });
+
+  it('keeps production as an extra possibility when another app may have connected before', () => {
+    const hint = leaseNotConnectedHint('http://localhost:4173/', 4400, {
+      initialized: true,
+      previouslyConnected: true,
+      sdkMarker: false,
+    });
+    expect(hint).toMatch(/DIFFERENT app/i);
+    expect(hint).toMatch(/reticle init/i);
+    expect(hint).toMatch(/production build/i);
+  });
+
+  it('does not attach the production explanation to a refused dial', () => {
+    const hint = leaseNotConnectedHint('http://localhost:4173/', 4400, {
+      refusal: 'wrong pairing token',
+      sdkMarker: false,
+    });
+    expect(hint).toContain('wrong pairing token');
+    expect(hint).not.toMatch(/production build/i);
+  });
+
+  it('does not attach the production explanation to a proven port mismatch', () => {
+    const hint = leaseNotConnectedHint('http://localhost:4173/', 4400, {
+      dialledUrl: 'ws://localhost:4444/reticle',
+      sdkMarker: false,
+    });
+    expect(hint).toContain('4444');
+    expect(hint).not.toMatch(/production build/i);
+  });
 });
