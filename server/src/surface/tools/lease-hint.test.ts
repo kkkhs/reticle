@@ -142,6 +142,14 @@ describe('a production build whose SDK was stubbed', () => {
     expect(hint).toMatch(/dev server/i);
   });
 
+  // Nothing says this project was ever wired, so a missing marker is first of all a missing
+  // install: the production note may join the init advice, never replace it.
+  it('keeps the init advice for an unwired project whose page carried no marker', () => {
+    const hint = leaseNotConnectedHint('http://localhost:4173/', 4400, { sdkMarker: false });
+    expect(hint).toContain('reticle init');
+    expect(hint).toMatch(/production build/i);
+  });
+
   it('does not treat every loopback address as production', () => {
     const hint = leaseNotConnectedHint('http://127.0.0.2:5173/', 4400);
     expect(hint).not.toMatch(/production build/i);

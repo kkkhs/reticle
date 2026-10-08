@@ -208,13 +208,12 @@ export function leaseNotConnectedHint(
 
   // 5. Nothing known. The differential, plus the possibility this app carries no SDK at all —
   //    except when the marker check already ruled that out, which is the whole reason for the bit.
+  // Nothing says the project was ever wired, so `reticle init` stays the advice whenever the SDK
+  // was not seen; a production build is the other way to serve a page without it.
   const noSdk =
     true === evidence.sdkMarker
       ? ''
-      : false === evidence.sdkMarker
-        ? ''
-        : isRemoteUrl(url)
-          ? PRODUCTION_STUB
-          : ' If the app carries no Reticle SDK at all, run `reticle init` in it first.';
+      : ' If the app carries no Reticle SDK at all, run `reticle init` in it first.' +
+        (false === evidence.sdkMarker || isRemoteUrl(url) ? PRODUCTION_STUB : '');
   return `${opening}${nuxt}${marker} ${PORT_DIFFERENTIAL}${noSdk} ${REAL_CAUSES} ${RELEASE}`;
 }
