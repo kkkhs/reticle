@@ -150,6 +150,18 @@ describe('a production build whose SDK was stubbed', () => {
     expect(hint).toMatch(/production build/i);
   });
 
+  it('never names a production stub beside an SDK marker that WAS found', () => {
+    for (const evidence of [
+      { previouslyConnected: true, sdkMarker: true },
+      { initialized: true, sdkMarker: true },
+      { sdkMarker: true },
+    ]) {
+      const hint = leaseNotConnectedHint('https://app.example.com/', 4400, evidence);
+      expect(hint).toMatch(/marker WAS found/);
+      expect(hint).not.toMatch(/production build/i);
+    }
+  });
+
   it('does not treat every loopback address as production', () => {
     const hint = leaseNotConnectedHint('http://127.0.0.2:5173/', 4400);
     expect(hint).not.toMatch(/production build/i);

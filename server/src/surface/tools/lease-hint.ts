@@ -192,7 +192,12 @@ export function leaseNotConnectedHint(
         : ' That may have been a DIFFERENT app, though: this one may carry no Reticle SDK at all, ' +
           'in which case run `reticle init` in ITS directory first — every cause below assumes the ' +
           'SDK is already installed.';
-    const production = false === evidence.sdkMarker || isRemoteUrl(url) ? PRODUCTION_STUB : '';
+    // Never beside a marker that WAS found: "it ships the SDK" and "the build stripped it" cannot
+    // both be the story.
+    const production =
+      true !== evidence.sdkMarker && (false === evidence.sdkMarker || isRemoteUrl(url))
+        ? PRODUCTION_STUB
+        : '';
     return (
       `${opening} An app for this project HAS connected on this port before, so the port is ` +
       `proven.${notThisApp}${nuxt}${marker}${production} ${REAL_CAUSES} ${RELEASE}`
