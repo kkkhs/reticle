@@ -129,6 +129,10 @@ const OVER_THE_LINE: Readonly<Record<string, number>> = {
   // envelope carries to the agent. It needs `ReticleTool`, and `wire/constants` may not reach up
   // into `wire` (the directory-reach guard refused it there).
   'core/src/wire': 19,
+  // 11 with `animation-command.ts`: the `reticle_animations` target argument lives outside
+  // `constants.ts`, because that file is already the monorepo's broad wire vocabulary. The split is
+  // deliberate even though it makes this shallow directory cross the line.
+  'core/src/wire/constants': 11,
   // 16 since `snapshot-tree.ts`. The snapshot tree is a format the BROWSER writes and several
   // things on the Node side read back, and its parser was living beside the MCP tool handlers — so
   // every other reader imported from the tool surface to parse a string the tool surface does not
