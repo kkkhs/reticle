@@ -76,6 +76,16 @@ describe('animation predicate', () => {
     });
   });
 
+  it('ignores Reticle-owned animation events when no name is requested', async () => {
+    const session = new AnimationSession([ev(EventType.ANIM_START, { name: 'reticle:busy' })], {
+      animations: [],
+    });
+
+    const result = await evaluatePredicate(session, { kind: 'animation' });
+
+    expect(result.pass).toBe(false);
+  });
+
   it('matches an already-running animation when the start event is not in the window', async () => {
     const session = new AnimationSession([], {
       animations: [{ name: 'spin', playState: 'running', target: spinner, targetMatches: true }],
@@ -90,6 +100,16 @@ describe('animation predicate', () => {
 
     expect(result.pass).toBe(true);
     expect(result.evidence).toMatchObject({ playState: 'running' });
+  });
+
+  it('ignores Reticle-owned live animations when no name is requested', async () => {
+    const session = new AnimationSession([], {
+      animations: [{ name: '__reticle-panel', playState: 'running', target: spinner }],
+    });
+
+    const result = await evaluatePredicate(session, { kind: 'animation' });
+
+    expect(result.pass).toBe(false);
   });
 
   it('matches a completed animation from a finished live animation when no end event arrived', async () => {
